@@ -1,0 +1,473 @@
+{
+  "$id": "https://skill-router.invalid/schemas/contextual-annotation-v2.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pair_id",
+    "input_sha256",
+    "catalog_sha256",
+    "body_sha256",
+    "request_sha256",
+    "runtime_id",
+    "identities",
+    "source_identity",
+    "cutoff_source",
+    "source_relevance",
+    "privacy",
+    "privacy_evidence",
+    "opinion_references",
+    "adjudication_reference",
+    "request_quote",
+    "body_quote",
+    "status",
+    "disposition",
+    "affirmative_exclusion",
+    "missing_facts",
+    "family_mask",
+    "conjunctive_groups",
+    "admitted",
+    "eligibility"
+  ],
+  "properties": {
+    "pair_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "input_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "catalog_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "body_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "request_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "runtime_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "identities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "example_id",
+        "event_id",
+        "conversation_group",
+        "template_group",
+        "request_index",
+        "split",
+        "event_kind"
+      ],
+      "properties": {
+        "example_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\x00-\\x1f\\x7f]+$"
+        },
+        "event_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\x00-\\x1f\\x7f]+$"
+        },
+        "conversation_group": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\x00-\\x1f\\x7f]+$"
+        },
+        "template_group": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "request_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "split": {
+          "enum": [
+            "train",
+            "validation",
+            "temporal_test",
+            "unseen_family_test",
+            "challenge"
+          ]
+        },
+        "event_kind": {
+          "enum": [
+            "user_request",
+            "user_correction",
+            "tool_batch_complete",
+            "stage_transition",
+            "proposed_action",
+            "session_restore"
+          ]
+        }
+      }
+    },
+    "source_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "target_version",
+        "canonical_pair_id"
+      ],
+      "properties": {
+        "case_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\x00-\\x1f\\x7f]+$"
+        },
+        "target_version": {
+          "const": "contextual-training-alignment-v1"
+        },
+        "canonical_pair_id": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "cutoff_source": {
+      "type": "object"
+    },
+    "source_relevance": {
+      "oneOf": [
+        {
+          "const": {
+            "state": "absent_new_synthetic_source"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "label_snapshot_sha256",
+            "original_label_type"
+          ],
+          "properties": {
+            "label_snapshot_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "original_label_type": {
+              "enum": [
+                "positive",
+                "verified_negative"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "sanitizer_sha256",
+        "scan_passed",
+        "export_approved",
+        "publication_allowed"
+      ],
+      "properties": {
+        "classification": {
+          "enum": [
+            "local_only",
+            "approved_remote_private"
+          ]
+        },
+        "sanitizer_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "scan_passed": {
+          "const": true
+        },
+        "export_approved": {
+          "type": "boolean"
+        },
+        "publication_allowed": {
+          "const": false
+        }
+      }
+    },
+    "privacy_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "json_pointer"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "json_pointer": {
+          "type": "string",
+          "pattern": "^(/|$)"
+        }
+      }
+    },
+    "opinion_references": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "author",
+        "reviewer"
+      ],
+      "properties": {
+        "author": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256",
+            "json_pointer"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "json_pointer": {
+              "type": "string",
+              "pattern": "^(/|$)"
+            },
+            "jsonl_line_1based": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "reviewer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256",
+            "json_pointer"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "json_pointer": {
+              "type": "string",
+              "pattern": "^(/|$)"
+            },
+            "jsonl_line_1based": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "adjudication_reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "json_pointer"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "json_pointer": {
+          "type": "string",
+          "pattern": "^(/|$)"
+        }
+      }
+    },
+    "request_quote": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start_byte",
+        "end_byte",
+        "source_sha256",
+        "quote_sha256"
+      ],
+      "properties": {
+        "start_byte": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_byte": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "quote_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "body_quote": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start_byte",
+        "end_byte",
+        "source_sha256",
+        "quote_sha256"
+      ],
+      "properties": {
+        "start_byte": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_byte": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "quote_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "contextual",
+        "response_only",
+        "nonapplicable",
+        "unresolved"
+      ]
+    },
+    "disposition": {
+      "enum": [
+        "eligible_resolved",
+        "unresolved",
+        "masked",
+        "ineligible",
+        "diagnostic"
+      ]
+    },
+    "affirmative_exclusion": {
+      "type": "string"
+    },
+    "missing_facts": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "family_mask": {
+      "type": "boolean"
+    },
+    "conjunctive_groups": {
+      "const": []
+    },
+    "admitted": {
+      "const": false
+    },
+    "eligibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "catalog_route",
+        "automatic_eligible",
+        "explicit_eligible",
+        "active_explicit_invocation"
+      ],
+      "properties": {
+        "catalog_route": {
+          "enum": [
+            "automatic",
+            "explicit",
+            "body-explicit-only-unmet"
+          ]
+        },
+        "automatic_eligible": {
+          "type": "boolean"
+        },
+        "explicit_eligible": {
+          "type": "boolean"
+        },
+        "active_explicit_invocation": {
+          "type": "boolean"
+        }
+      }
+    },
+    "purposes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "calibration_fit",
+        "evaluation",
+        "diagnostic",
+        "fit_exclusions"
+      ],
+      "properties": {
+        "calibration_fit": {
+          "type": "boolean"
+        },
+        "evaluation": {
+          "type": "boolean"
+        },
+        "diagnostic": {
+          "type": "boolean"
+        },
+        "fit_exclusions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mixed contextual annotation v2"
+}

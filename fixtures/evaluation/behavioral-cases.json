@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "purpose": "Nonprivate scenario specifications, not machine-audited examples or observed outcomes",
+  "cases": [
+    {"name": "review-only-no-deploy", "strata": ["negation", "review-only", "no-deploy"], "events": ["Review the release configuration. Do not change files or deploy."], "assertions": ["Review instructions may apply", "Deployment must not execute", "Mentioning deployment does not make deployment instructions conditionally relevant"]},
+    {"name": "multi-skill-stage-change", "strata": ["multi-skill", "stage-change"], "events": ["Inspect the form's keyboard behavior and validation text.", "Now implement the approved accessibility and validation fixes."], "assertions": ["More than one conditional skill may apply", "Stage transition creates a fresh routing decision", "Earlier review-only scope does not authorize later edits without the second instruction"]},
+    {"name": "false-friend-alternative-bundles", "strata": ["false-friend", "overlap"], "events": ["Explain a spring animation. Do not configure a Spring server."], "assertions": ["Lexical overlap is not verified applicability", "Either complete accepted instructional bundle earns set credit", "Unioning incompatible alternatives does not earn exact-set credit"]},
+    {"name": "hidden-explicit-disabled", "strata": ["explicit", "hidden", "disabled"], "events": ["Use the explicitly named enabled hidden review skill.", "The disabled deployment skill remains unavailable."], "assertions": ["Enabled hidden skill can enter through explicit trusted policy", "Hidden skill is not automatically retrieved", "Disabled skill remains absent from the catalog"]},
+    {"name": "insufficient-information", "strata": ["insufficient-info"], "events": ["Do that thing."], "assertions": ["Insufficient evidence is uncertain, not none", "No fabricated action or context enters the request"]},
+    {"name": "renamed-unseen-description", "strata": ["renamed", "unseen-description"], "events": ["Evaluate the task with a new resolved skill name and its current description."], "assertions": ["Resolved IDs are join keys, not learned output classes", "Current description and content digest must match the frozen catalog"]},
+    {"name": "restore-body-evidence", "strata": ["restore"], "events": ["A prior session had loaded the required instructions.", "Restore the session, then propose the first relevant action."], "assertions": ["Historical loaded state is not current outgoing-body evidence", "Required body must precede the action", "Missing activation measurement stays missing rather than successful"]}
+  ]
+}

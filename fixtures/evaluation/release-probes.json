@@ -1,0 +1,49 @@
+{
+  "catalog": [
+    [
+      "keyboard",
+      "Find keyboard navigation defects and missing accessible names in web forms."
+    ],
+    [
+      "containers",
+      "Build container images and configure container registries."
+    ],
+    [
+      "sql",
+      "Review database query plans and improve SQL performance."
+    ],
+    [
+      "python",
+      "Diagnose Python exceptions and repair failing Python programs."
+    ],
+    [
+      "types",
+      "Implement strict TypeScript types and resolve compiler errors."
+    ],
+    [
+      "docs",
+      "Write user documentation with tested installation instructions."
+    ],
+    [
+      "images",
+      "Resize photographs and convert image file formats."
+    ],
+    [
+      "release-review",
+      "Review a proposed release plan without executing deployments."
+    ],
+    [
+      "deploy",
+      "Execute application deployments and publish production releases."
+    ],
+    [
+      "audio",
+      "Edit speech recordings and remove background noise."
+    ]
+  ],
+  "requests": [
+    "Find focus-order defects in this web settings form. Do not change its visual style.",
+    "What is seventeen multiplied by six?",
+    "Review the proposed container release plan only. Do not build, publish, or deploy anything."
+  ]
+}

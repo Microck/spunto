@@ -1,0 +1,5 @@
+# CPython 3.11, Linux ARM64. Resolve a binary-only transitive hash lock before install.
+# The installer uses the complete wheel hashes in inference.lock.
+onnxruntime==1.23.2
+tokenizers==0.22.1
+numpy==2.2.6

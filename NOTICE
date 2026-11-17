@@ -1,0 +1,19 @@
+Spunto
+Copyright 2026 Microck
+
+Spunto's code and model release are licensed under Apache License 2.0.
+
+The decision model derives from cross-encoder/ms-marco-MiniLM-L6-v2,
+published by the Sentence Transformers project under Apache License 2.0.
+Spunto fine-tunes its encoder and adds a learned projection and recurrent
+routing head. The released FP32 ONNX graphs preserve those trained weights.
+https://huggingface.co/cross-encoder/ms-marco-MiniLM-L6-v2
+
+The retrieval model is an FP32 ONNX export of the unchanged pretrained
+sentence-transformers/all-MiniLM-L6-v2, published by the Sentence Transformers
+project under Apache License 2.0.
+https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
+
+Training used distillation from Qwen/Qwen3-Reranker-0.6B, published by the
+Qwen team under Apache License 2.0. Teacher weights are not distributed.
+https://huggingface.co/Qwen/Qwen3-Reranker-0.6B

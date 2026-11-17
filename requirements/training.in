@@ -1,0 +1,20 @@
+# Resolver prerequisite, NOT a lock and NOT a tested compatible environment.
+# Resolve a complete exact-version/hash closure on the CPython 3.11 training
+# host, test it there, and pass that lock to --dependency-lock.
+# Only the CrossEncoder API version below was checked against tagged source:
+# https://github.com/huggingface/sentence-transformers/blob/v5.1.2/sentence_transformers/cross_encoder/CrossEncoder.py
+sentence-transformers==5.1.2
+# Resolve and test compatible versions on the training host.
+# CUDA 12.4 wheels; the pilot checks the actual driver before installation.
+torch==2.6.0
+transformers==4.57.1
+# Match the local inference tokenizer for the parity check.
+tokenizers==0.22.1
+numpy
+onnx
+# Match local inference; CPython 3.11 x86_64 wheel availability checked on PyPI.
+# Test full training compatibility before starting a long run.
+onnxruntime==1.23.2
+packaging
+jsonschema
+referencing

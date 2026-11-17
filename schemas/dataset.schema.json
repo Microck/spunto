@@ -1,0 +1,1511 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://skill-router.invalid/schemas/dataset.schema.json",
+  "title": "One private routing decision at an evidence cutoff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "example_id",
+    "source",
+    "split",
+    "event_kind",
+    "catalog_sha256",
+    "policy_sha256",
+    "input",
+    "audit",
+    "privacy"
+  ],
+  "properties": {
+    "contextual": {
+      "description": "Admitted contextual target. The label field remains unchanged broad-label provenance and is never a training target.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "binding_sha256",
+        "pair_ids"
+      ],
+      "properties": {
+        "binding_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "pair_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/digest"
+          }
+        }
+      }
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "example_id": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/privateId"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+        }
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "adapter",
+        "conversation_group",
+        "event_id",
+        "event_sequence",
+        "cutoff_utc",
+        "source_manifest_sha256",
+        "lineage_sha256",
+        "origin",
+        "label_basis",
+        "template_group"
+      ],
+      "properties": {
+        "adapter": {
+          "enum": [
+            "omp-v3",
+            "codex",
+            "claude",
+            "synthetic"
+          ]
+        },
+        "conversation_group": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/privateId"
+                },
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "event_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/privateId"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+            }
+          ]
+        },
+        "event_sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cutoff_utc": {
+          "$ref": "#/$defs/utc"
+        },
+        "source_manifest_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "lineage_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "origin": {
+          "enum": [
+            "history_abstraction",
+            "synthetic"
+          ]
+        },
+        "label_basis": {
+          "enum": [
+            "historical_snapshot",
+            "current_catalog_relabel",
+            "synthetic_contract"
+          ]
+        },
+        "template_group": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/privateId"
+                },
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "provenance_kind": {
+          "const": "authored_contextual_v2"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "origin": {
+                "const": "synthetic"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": {
+                "const": "synthetic"
+              },
+              "label_basis": {
+                "const": "synthetic_contract"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "split": {
+      "enum": [
+        "train",
+        "validation",
+        "temporal_test",
+        "unseen_family_test",
+        "challenge",
+        "quarantine"
+      ]
+    },
+    "event_kind": {
+      "enum": [
+        "user_request",
+        "user_correction",
+        "tool_batch_complete",
+        "stage_transition",
+        "proposed_action",
+        "session_restore"
+      ]
+    },
+    "catalog_sha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "policy_sha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request",
+        "evidence",
+        "action",
+        "already_loaded",
+        "candidate_ids",
+        "candidate_coverage",
+        "required_ids",
+        "excluded_ids",
+        "explicit_ids"
+      ],
+      "properties": {
+        "request": {
+          "type": "string",
+          "maxLength": 32768
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        },
+        "action": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "tool_name",
+                "summary"
+              ],
+              "properties": {
+                "tool_name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "summary": {
+                  "type": "string",
+                  "maxLength": 2048
+                }
+              }
+            }
+          ]
+        },
+        "already_loaded": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "runtime_id",
+              "content_sha256"
+            ],
+            "properties": {
+              "runtime_id": {
+                "$ref": "#/$defs/id"
+              },
+              "content_sha256": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          }
+        },
+        "candidate_ids": {
+          "$ref": "#/$defs/ids"
+        },
+        "candidate_coverage": {
+          "enum": [
+            "full",
+            "shortlist"
+          ]
+        },
+        "required_ids": {
+          "$ref": "#/$defs/ids"
+        },
+        "excluded_ids": {
+          "$ref": "#/$defs/ids"
+        },
+        "explicit_ids": {
+          "$ref": "#/$defs/ids"
+        }
+      }
+    },
+    "label": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision",
+        "selected_ids",
+        "activate_now",
+        "verified_negative_ids",
+        "unknown_ids",
+        "acceptable_alternative_sets",
+        "support",
+        "earliest_supported_event",
+        "activation_deadline_event"
+      ],
+      "properties": {
+        "decision": {
+          "enum": [
+            "selected",
+            "none",
+            "uncertain"
+          ]
+        },
+        "selected_ids": {
+          "$ref": "#/$defs/ids"
+        },
+        "activate_now": {
+          "$ref": "#/$defs/ids"
+        },
+        "verified_negative_ids": {
+          "$ref": "#/$defs/ids"
+        },
+        "unknown_ids": {
+          "$ref": "#/$defs/ids"
+        },
+        "acceptable_alternative_sets": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/ids"
+              }
+            ],
+            "minItems": 1
+          }
+        },
+        "support": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "runtime_id",
+              "judgment",
+              "evidence_ids",
+              "contract_sha256",
+              "clause_ref"
+            ],
+            "properties": {
+              "runtime_id": {
+                "$ref": "#/$defs/id"
+              },
+              "judgment": {
+                "enum": [
+                  "positive",
+                  "negative"
+                ]
+              },
+              "evidence_ids": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "#/$defs/id"
+                }
+              },
+              "contract_sha256": {
+                "$ref": "#/$defs/digest"
+              },
+              "clause_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "earliest_supported_event": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/privateId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "activation_deadline_event": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/privateId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "selected"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "selected_ids": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "enum": [
+                  "none",
+                  "uncertain"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "selected_ids": {
+                "maxItems": 0
+              },
+              "activate_now": {
+                "maxItems": 0
+              },
+              "acceptable_alternative_sets": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "none"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "unknown_ids": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "audit": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/broadAudit"
+        },
+        {
+          "const": {
+            "status": "contextual_pair_audited",
+            "scope": "contextual_pairs",
+            "human_reviewed": false,
+            "full_catalog_reviewed": false,
+            "reviewers": [],
+            "disagreement": false,
+            "adjudication_sha256": null,
+            "reconciliation_sha256": null
+          }
+        }
+      ]
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "sanitizer_sha256",
+        "scan_passed",
+        "export_approved",
+        "publication_allowed"
+      ],
+      "properties": {
+        "classification": {
+          "enum": [
+            "local_only",
+            "approved_remote_private"
+          ]
+        },
+        "sanitizer_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "scan_passed": {
+          "type": "boolean"
+        },
+        "export_approved": {
+          "type": "boolean"
+        },
+        "publication_allowed": {
+          "const": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "const": "approved_remote_private"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "scan_passed": {
+                "const": true
+              },
+              "export_approved": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "prior_broad_provenance": {
+      "const": {
+        "state": "absent_new_synthetic_source"
+      }
+    },
+    "authored": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "messages",
+        "case_reference",
+        "role_plan_sha256",
+        "event_metadata",
+        "prefix_reference",
+        "source_fields",
+        "message_mapping"
+      ],
+      "properties": {
+        "case_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+        },
+        "messages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object"
+          },
+          "maxItems": 1024
+        },
+        "case_reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256",
+            "json_pointer"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "json_pointer": {
+              "type": "string",
+              "pattern": "^(/|$)"
+            }
+          }
+        },
+        "role_plan_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "event_metadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "basis",
+            "event_id",
+            "event_sequence",
+            "cutoff_utc"
+          ],
+          "properties": {
+            "basis": {
+              "const": "SYNTHETIC"
+            },
+            "event_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+            },
+            "event_sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cutoff_utc": {
+              "$ref": "#/$defs/utc"
+            }
+          }
+        },
+        "prefix_reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256",
+            "json_pointer"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "json_pointer": {
+              "type": "string",
+              "pattern": "^(/|$)"
+            }
+          }
+        },
+        "source_fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "synthetic",
+            "case_id",
+            "messages",
+            "conversation_group",
+            "template_group"
+          ],
+          "properties": {
+            "synthetic": {
+              "type": "string",
+              "pattern": "^/",
+              "maxLength": 1024
+            },
+            "case_id": {
+              "type": "string",
+              "pattern": "^/",
+              "maxLength": 1024
+            },
+            "messages": {
+              "type": "string",
+              "pattern": "^/",
+              "maxLength": 1024
+            },
+            "conversation_group": {
+              "type": "string",
+              "pattern": "^/",
+              "maxLength": 1024
+            },
+            "template_group": {
+              "type": "string",
+              "pattern": "^/",
+              "maxLength": 1024
+            }
+          }
+        },
+        "message_mapping": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1024,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "message_index",
+              "event_id",
+              "raw_role",
+              "role",
+              "fields"
+            ],
+            "properties": {
+              "message_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "event_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+              },
+              "raw_role": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+              },
+              "role": {
+                "enum": [
+                  "user",
+                  "assistant",
+                  "toolCall",
+                  "toolResult",
+                  "proposed_action",
+                  "compactionSummary",
+                  "branchSummary"
+                ]
+              },
+              "fields": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "role",
+                  "text",
+                  "action",
+                  "tool_call_event_id"
+                ],
+                "properties": {
+                  "role": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 1024
+                  },
+                  "text": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 1024
+                  },
+                  "action": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 1024
+                  },
+                  "tool_call_event_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 1024
+                  }
+                }
+              }
+            }
+          }
+        },
+        "projection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "synthetic_value_pointer",
+            "source_context_pointer",
+            "active_request_pointer",
+            "active_request_hash_pointer",
+            "compiled_intent_sha256",
+            "decision_reference",
+            "native_messages"
+          ],
+          "properties": {
+            "synthetic_value_pointer": {
+              "type": "string"
+            },
+            "source_context_pointer": {
+              "type": "string"
+            },
+            "active_request_pointer": {
+              "type": "string"
+            },
+            "active_request_hash_pointer": {
+              "type": "string"
+            },
+            "compiled_intent_sha256": {
+              "type": "string"
+            },
+            "decision_reference": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256",
+                "json_pointer"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                "json_pointer": {
+                  "type": "string",
+                  "pattern": "^(/|$)"
+                }
+              }
+            },
+            "native_messages": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1024,
+              "items": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "event_kind": {
+            "const": "proposed_action"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "input": {
+            "properties": {
+              "action": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "source": {
+            "required": [
+              "provenance_kind"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "authored",
+          "prior_broad_provenance"
+        ],
+        "not": {
+          "required": [
+            "label"
+          ]
+        },
+        "properties": {
+          "example_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+          },
+          "audit": {
+            "const": {
+              "status": "contextual_pair_audited",
+              "scope": "contextual_pairs",
+              "human_reviewed": false,
+              "full_catalog_reviewed": false,
+              "reviewers": [],
+              "disagreement": false,
+              "adjudication_sha256": null,
+              "reconciliation_sha256": null
+            }
+          },
+          "source": {
+            "properties": {
+              "origin": {
+                "const": "synthetic"
+              },
+              "conversation_group": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+              },
+              "template_group": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+              },
+              "event_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "required": [
+          "label"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "authored"
+              ]
+            },
+            {
+              "required": [
+                "prior_broad_provenance"
+              ]
+            }
+          ]
+        },
+        "properties": {
+          "example_id": {
+            "$ref": "#/$defs/privateId"
+          },
+          "audit": {
+            "$ref": "#/$defs/broadAudit"
+          },
+          "source": {
+            "properties": {
+              "conversation_group": {
+                "$ref": "#/$defs/privateId"
+              },
+              "template_group": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/privateId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "event_id": {
+                "$ref": "#/$defs/privateId"
+              }
+            }
+          },
+          "input": {
+            "properties": {
+              "evidence": {
+                "items": {
+                  "properties": {
+                    "source_event_id": {
+                      "$ref": "#/$defs/privateId"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "label": {
+                  "properties": {
+                    "decision": {
+                      "const": "none"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "input": {
+                  "properties": {
+                    "candidate_coverage": {
+                      "const": "full"
+                    }
+                  }
+                },
+                "audit": {
+                  "properties": {
+                    "full_catalog_reviewed": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "split": {
+                  "not": {
+                    "const": "quarantine"
+                  }
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "audit": {
+                  "properties": {
+                    "status": {
+                      "const": "machine_audited"
+                    }
+                  }
+                },
+                "privacy": {
+                  "properties": {
+                    "scan_passed": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "$ref": "catalog.schema.json#/$defs/id"
+    },
+    "ids": {
+      "$ref": "catalog.schema.json#/$defs/ids"
+    },
+    "digest": {
+      "$ref": "catalog.schema.json#/$defs/digest"
+    },
+    "utc": {
+      "$ref": "catalog.schema.json#/$defs/utc"
+    },
+    "supervisedPair": {
+      "description": "One original supervised pair under intent-action-window-bag-v2; never a per-window label.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intent",
+        "action",
+        "description",
+        "label",
+        "group_id",
+        "split",
+        "contextual"
+      ],
+      "properties": {
+        "intent": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32768
+        },
+        "action": {
+          "$ref": "routing.schema.json#/$defs/action"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "integer",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "group_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/privateId"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+            }
+          ]
+        },
+        "split": {
+          "enum": [
+            "train",
+            "validation",
+            "temporal_test",
+            "unseen_family_test",
+            "challenge"
+          ]
+        },
+        "contextual": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "binding_sha256",
+            "contributors"
+          ],
+          "properties": {
+            "binding_sha256": {
+              "$ref": "#/$defs/digest"
+            },
+            "contributors": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "pair_id",
+                  "annotation_sha256",
+                  "identities",
+                  "runtime_id",
+                  "body_sha256",
+                  "input_sha256",
+                  "request_sha256",
+                  "action_sha256",
+                  "source_record_sha256"
+                ],
+                "properties": {
+                  "pair_id": {
+                    "$ref": "#/$defs/digest"
+                  },
+                  "annotation_sha256": {
+                    "$ref": "#/$defs/digest"
+                  },
+                  "runtime_id": {
+                    "$ref": "#/$defs/id"
+                  },
+                  "body_sha256": {
+                    "$ref": "#/$defs/digest"
+                  },
+                  "input_sha256": {
+                    "$ref": "#/$defs/digest"
+                  },
+                  "request_sha256": {
+                    "$ref": "#/$defs/digest"
+                  },
+                  "action_sha256": {
+                    "$ref": "#/$defs/digest"
+                  },
+                  "source_record_sha256": {
+                    "$ref": "#/$defs/digest"
+                  },
+                  "identities": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "example_id",
+                      "event_id",
+                      "conversation_group",
+                      "template_group",
+                      "request_index",
+                      "split",
+                      "event_kind"
+                    ],
+                    "properties": {
+                      "example_id": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/$defs/privateId"
+                          },
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256,
+                            "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+                          }
+                        ]
+                      },
+                      "event_id": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/$defs/privateId"
+                          },
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256,
+                            "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+                          }
+                        ]
+                      },
+                      "conversation_group": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/$defs/privateId"
+                          },
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256,
+                            "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+                          }
+                        ]
+                      },
+                      "template_group": {
+                        "anyOf": [
+                          {
+                            "anyOf": [
+                              {
+                                "$ref": "#/$defs/privateId"
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256,
+                                "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "request_index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "split": {
+                        "enum": [
+                          "train",
+                          "validation",
+                          "temporal_test",
+                          "unseen_family_test",
+                          "challenge"
+                        ]
+                      },
+                      "event_kind": {
+                        "$ref": "#/properties/event_kind"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "privateId": {
+      "type": "string",
+      "pattern": "^hmac:[0-9a-f]{64}$"
+    },
+    "reconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "kind",
+        "example_id",
+        "input_sha256",
+        "teacher_a_output_sha256",
+        "teacher_b_output_sha256",
+        "base_output_sha256",
+        "base_association_sha256",
+        "reaudit_output_sha256",
+        "conflicting_ids",
+        "group_evidence_sha256",
+        "clause_translation_sha256",
+        "coordinator_output_sha256",
+        "coordinator_settings_sha256"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "conservative-reconciliation"
+        },
+        "example_id": {
+          "$ref": "#/$defs/privateId"
+        },
+        "input_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "teacher_a_output_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "teacher_b_output_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "base_output_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "base_association_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "reaudit_output_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conflicting_ids": {
+          "$ref": "#/$defs/ids"
+        },
+        "group_evidence_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "clause_translation_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "coordinator_output_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "coordinator_settings_sha256": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source_event_id",
+        "event_sequence",
+        "observed_at",
+        "kind",
+        "text"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "source_event_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/privateId"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^(?!hmac:)[^\\x00-\\x1f\\x7f]+$"
+            }
+          ]
+        },
+        "event_sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observed_at": {
+          "$ref": "#/$defs/utc"
+        },
+        "kind": {
+          "enum": [
+            "user_intent",
+            "user_constraint",
+            "tool_fact",
+            "phase",
+            "restore_fact"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 4096
+        }
+      }
+    },
+    "broadAudit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "human_reviewed",
+        "full_catalog_reviewed",
+        "reviewers",
+        "disagreement",
+        "adjudication_sha256",
+        "reconciliation_sha256"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "pending",
+            "machine_audited",
+            "quarantined"
+          ]
+        },
+        "human_reviewed": {
+          "const": false
+        },
+        "full_catalog_reviewed": {
+          "type": "boolean"
+        },
+        "reviewers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "model",
+              "model_revision",
+              "settings_sha256",
+              "prompt_sha256",
+              "output_sha256"
+            ],
+            "properties": {
+              "role": {
+                "enum": [
+                  "teacher_a",
+                  "teacher_b",
+                  "adjudicator",
+                  "reaudit",
+                  "coordinator"
+                ]
+              },
+              "model": {
+                "type": "string",
+                "minLength": 1
+              },
+              "model_revision": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "settings_sha256": {
+                "$ref": "#/$defs/digest"
+              },
+              "prompt_sha256": {
+                "$ref": "#/$defs/digest"
+              },
+              "output_sha256": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          }
+        },
+        "disagreement": {
+          "type": "boolean"
+        },
+        "adjudication_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reconciliation_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "machine_audited"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "full_catalog_reviewed": {
+                "const": true
+              },
+              "reviewers": {
+                "minItems": 2
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

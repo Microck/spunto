@@ -1,0 +1,609 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://skill-router.invalid/schemas/model-bundle.schema.json",
+  "title": "Retrieval or decision inference bundle",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/decision"
+    },
+    {
+      "$ref": "#/$defs/retrieval"
+    }
+  ],
+  "$defs": {
+    "digest": {
+      "$ref": "catalog.schema.json#/$defs/digest"
+    },
+    "decimal": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+      "description": "Finite decimal string; parse as a finite float for inference. No exponent, NaN or infinity. Strings avoid cross-language float serialization in digests."
+    },
+    "path": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+(?:[./][A-Za-z0-9_-]+)*$",
+      "description": "Relative artifact path. Duplicate paths, manifest self-inclusion and escaping symlinks are forbidden."
+    },
+    "tensor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "dtype",
+        "shape"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dtype": {
+          "enum": [
+            "int64",
+            "float32",
+            "float64"
+          ]
+        },
+        "shape": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "enum": [
+                  "batch",
+                  "sequence"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "model",
+        "graphs",
+        "tokenizer_file",
+        "model_config_file",
+        "files",
+        "pair_format",
+        "geometry",
+        "selection",
+        "limits",
+        "calibration",
+        "provenance",
+        "scorer_sha256",
+        "selector_sha256",
+        "calibration_sha256",
+        "publication_allowed"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "model": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "base",
+            "revision"
+          ],
+          "properties": {
+            "type": {
+              "const": "window_bag"
+            },
+            "base": {
+              "enum": [
+                "cross-encoder/ms-marco-TinyBERT-L2-v2",
+                "cross-encoder/ms-marco-MiniLM-L6-v2"
+              ]
+            },
+            "revision": {
+              "enum": [
+                "81d1926f67cb8eee2c2be17ca9f793c7c3bd20cc",
+                "233902d25c440f23af6f7d6e94d2946bac0bee0a"
+              ]
+            }
+          }
+        },
+        "tokenizer_file": {
+          "$ref": "#/$defs/path"
+        },
+        "model_config_file": {
+          "$ref": "#/$defs/path"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256",
+              "bytes"
+            ],
+            "properties": {
+              "path": {
+                "$ref": "#/$defs/path"
+              },
+              "sha256": {
+                "$ref": "#/$defs/digest"
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        },
+        "pair_format": {
+          "const": "intent-action-window-bag-v2"
+        },
+        "selection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "lower_logit",
+            "upper_logit",
+            "max_optional",
+            "validation_sha256",
+            "fit_split"
+          ],
+          "properties": {
+            "lower_logit": {
+              "$ref": "#/$defs/decimal"
+            },
+            "upper_logit": {
+              "$ref": "#/$defs/decimal"
+            },
+            "max_optional": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "validation_sha256": {
+              "$ref": "#/$defs/digest"
+            },
+            "fit_split": {
+              "const": "validation"
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "max_candidates",
+            "max_line_bytes",
+            "microbatch",
+            "request_timeout_ms",
+            "startup_timeout_ms"
+          ],
+          "properties": {
+            "max_candidates": {
+              "const": 32
+            },
+            "max_line_bytes": {
+              "const": 131072
+            },
+            "microbatch": {
+              "const": 4
+            },
+            "request_timeout_ms": {
+              "const": 750
+            },
+            "startup_timeout_ms": {
+              "const": 10000
+            }
+          }
+        },
+        "calibration": {
+          "type": "null"
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "contextual_binding",
+            "dataset_sha256",
+            "split_sha256",
+            "recipe_sha256",
+            "runtime_revision"
+          ],
+          "properties": {
+            "contextual_binding": {
+              "$ref": "catalog.schema.json#/$defs/compactContextualBinding"
+            },
+            "dataset_sha256": {
+              "$ref": "#/$defs/digest"
+            },
+            "split_sha256": {
+              "$ref": "#/$defs/digest"
+            },
+            "recipe_sha256": {
+              "$ref": "#/$defs/digest"
+            },
+            "runtime_revision": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "scorer_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "selector_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "calibration_sha256": {
+          "type": "null"
+        },
+        "publication_allowed": {
+          "const": true
+        },
+        "geometry": {
+          "const": {
+            "max_window_tokens": 323,
+            "max_payload_tokens": 320,
+            "overlap_tokens": 0,
+            "max_bag_windows": 1,
+            "max_request_windows": 32,
+            "intent_policy": "tail",
+            "description_policy": "head",
+            "max_intent_tokens": 96,
+            "max_action_tokens": 96,
+            "allocation": "intent-cap-then-description",
+            "order": "intent-major-description-minor",
+            "hidden_size": 32,
+            "pooled_size": 128,
+            "position_size": 4,
+            "aggregator": "torch-grucell"
+          }
+        },
+        "graphs": {
+          "const": {
+            "encoder": {
+              "file": "encoder.onnx",
+              "inputs": [
+                {
+                  "name": "input_ids",
+                  "dtype": "int64",
+                  "shape": [
+                    "batch",
+                    "sequence"
+                  ]
+                },
+                {
+                  "name": "attention_mask",
+                  "dtype": "int64",
+                  "shape": [
+                    "batch",
+                    "sequence"
+                  ]
+                },
+                {
+                  "name": "token_type_ids",
+                  "dtype": "int64",
+                  "shape": [
+                    "batch",
+                    "sequence"
+                  ]
+                }
+              ],
+              "outputs": [
+                {
+                  "name": "pooled",
+                  "dtype": "float32",
+                  "shape": [
+                    "batch",
+                    128
+                  ]
+                }
+              ]
+            },
+            "aggregator": {
+              "file": "aggregator-step.onnx",
+              "inputs": [
+                {
+                  "name": "pooled",
+                  "dtype": "float32",
+                  "shape": [
+                    "batch",
+                    128
+                  ]
+                },
+                {
+                  "name": "positions",
+                  "dtype": "float32",
+                  "shape": [
+                    "batch",
+                    4
+                  ]
+                },
+                {
+                  "name": "hidden",
+                  "dtype": "float32",
+                  "shape": [
+                    "batch",
+                    32
+                  ]
+                }
+              ],
+              "outputs": [
+                {
+                  "name": "hidden_out",
+                  "dtype": "float32",
+                  "shape": [
+                    "batch",
+                    32
+                  ]
+                },
+                {
+                  "name": "logit",
+                  "dtype": "float32",
+                  "shape": [
+                    "batch",
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "retrieval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "tokenizer_file",
+        "model_config_file",
+        "files",
+        "limits",
+        "scorer_sha256",
+        "selector_sha256",
+        "publication_allowed",
+        "role",
+        "model",
+        "graphs",
+        "pooling",
+        "embedding_table",
+        "selection",
+        "provenance"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "tokenizer_file": {
+          "$ref": "#/$defs/path"
+        },
+        "model_config_file": {
+          "$ref": "#/$defs/path"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256",
+              "bytes"
+            ],
+            "properties": {
+              "path": {
+                "$ref": "#/$defs/path"
+              },
+              "sha256": {
+                "$ref": "#/$defs/digest"
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "max_candidates",
+            "max_line_bytes",
+            "microbatch",
+            "request_timeout_ms",
+            "startup_timeout_ms"
+          ],
+          "properties": {
+            "max_candidates": {
+              "const": 32
+            },
+            "max_line_bytes": {
+              "const": 131072
+            },
+            "microbatch": {
+              "const": 4
+            },
+            "request_timeout_ms": {
+              "const": 750
+            },
+            "startup_timeout_ms": {
+              "const": 10000
+            }
+          }
+        },
+        "scorer_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "selector_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "publication_allowed": {
+          "const": true
+        },
+        "role": {
+          "const": "retrieval"
+        },
+        "model": {
+          "const": {
+            "type": "bi_encoder",
+            "base": "sentence-transformers/all-MiniLM-L6-v2",
+            "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
+          }
+        },
+        "graphs": {
+          "const": {
+            "encoder": {
+              "file": "encoder.onnx",
+              "inputs": [
+                {
+                  "name": "input_ids",
+                  "dtype": "int64",
+                  "shape": [
+                    "batch",
+                    "sequence"
+                  ]
+                },
+                {
+                  "name": "attention_mask",
+                  "dtype": "int64",
+                  "shape": [
+                    "batch",
+                    "sequence"
+                  ]
+                },
+                {
+                  "name": "token_type_ids",
+                  "dtype": "int64",
+                  "shape": [
+                    "batch",
+                    "sequence"
+                  ]
+                }
+              ],
+              "outputs": [
+                {
+                  "name": "pooled",
+                  "dtype": "float32",
+                  "shape": [
+                    "batch",
+                    384
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "pooling": {
+          "const": {
+            "max_chunk_tokens": 256,
+            "payload_tokens": 254,
+            "context_payload_tokens": 254,
+            "context_selection": "tail",
+            "overlap_tokens": 0,
+            "token_pooling": "attention-masked-mean-including-specials",
+            "chunk_pooling": "payload-length-weighted-mean",
+            "normalization": "l2",
+            "dimensions": 384
+          }
+        },
+        "embedding_table": {
+          "const": "embeddings.json"
+        },
+        "selection": {
+          "const": {
+            "top_k": 8,
+            "tie_break": "id"
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "oneOf": [
+            { "properties": {
+              "weights": { "const": "unchanged_pretrained" }, "fit_split": { "const": null },
+              "training_data_used": { "const": false }, "training_report_sha256": { "const": null },
+              "training_recipe_sha256": { "const": null }
+            } },
+            { "properties": {
+              "weights": { "const": "fine_tuned" }, "fit_split": { "const": "validation" },
+              "training_data_used": { "const": true },
+              "training_report_sha256": { "$ref": "#/$defs/digest" },
+              "training_recipe_sha256": { "$ref": "#/$defs/digest" }
+            } }
+          ],
+          "required": [
+            "contextual_binding",
+            "catalog_sha256",
+            "recipe_sha256",
+            "runtime_revision",
+            "runtime_files",
+            "dataset_sha256",
+            "split_sha256",
+            "weights",
+            "training_report_sha256",
+            "training_recipe_sha256",
+            "fit_split",
+            "training_data_used"
+          ],
+          "properties": {
+            "contextual_binding": {
+              "$ref": "catalog.schema.json#/$defs/compactContextualBinding"
+            },
+            "catalog_sha256": {
+              "$ref": "#/$defs/digest"
+            },
+            "recipe_sha256": {
+              "$ref": "#/$defs/digest"
+            },
+            "runtime_revision": {
+              "$ref": "#/$defs/digest"
+            },
+            "dataset_sha256": { "$ref": "#/$defs/digest" },
+            "split_sha256": { "$ref": "#/$defs/digest" },
+            "weights": { "enum": ["unchanged_pretrained", "fine_tuned"] },
+            "training_report_sha256": { "anyOf": [{ "$ref": "#/$defs/digest" }, { "type": "null" }] },
+            "training_recipe_sha256": { "anyOf": [{ "$ref": "#/$defs/digest" }, { "type": "null" }] },
+            "fit_split": { "enum": [null, "validation"] },
+            "training_data_used": { "type": "boolean" },
+            "runtime_files": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "retrieval.py",
+                "router-worker.py",
+                "pair-windows.py"
+              ],
+              "properties": {
+                "retrieval.py": {
+                  "$ref": "#/$defs/digest"
+                },
+                "router-worker.py": {
+                  "$ref": "#/$defs/digest"
+                },
+                "pair-windows.py": {
+                  "$ref": "#/$defs/digest"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

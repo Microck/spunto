@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://skill-router.invalid/schemas/routing.schema.json",
+  "title": "Skill routing request, decision and safe telemetry",
+  "description": "Validate the appropriate named definition at each interface. Root accepts a request or response, never telemetry. Cross-record invariants require host validation.",
+  "oneOf": [{"$ref": "#/$defs/request"}, {"$ref": "#/$defs/response"}],
+  "$defs": {
+    "id": {"$ref": "catalog.schema.json#/$defs/id"},
+    "ids": {"$ref": "catalog.schema.json#/$defs/ids"},
+    "digest": {"$ref": "catalog.schema.json#/$defs/digest"},
+    "action": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "object", "additionalProperties": false, "required": ["toolName", "summary"], "properties": {
+          "toolName": {"type": "string", "minLength": 1, "maxLength": 256},
+          "summary": {"type": "string", "maxLength": 2048}
+        }}
+      ]
+    },
+    "candidate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "description", "contentDigest"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"$ref": "#/$defs/id"},
+        "description": {"type": "string", "maxLength": 16384},
+        "contentDigest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "requestId", "sessionKey", "generation", "event", "catalogDigest", "contextDigest", "policyDigest", "selectorDigest", "intent", "action", "candidates", "candidateCoverage", "requiredIds", "excludedIds", "maxSelections"],
+      "properties": {
+        "version": {"const": 1},
+        "requestId": {"$ref": "#/$defs/id"},
+        "sessionKey": {"$ref": "#/$defs/id"},
+        "generation": {"type": "integer", "minimum": 0},
+        "event": {"enum": ["context", "tool_call"]},
+        "catalogDigest": {"$ref": "#/$defs/digest"},
+        "contextDigest": {"$ref": "#/$defs/digest"},
+        "policyDigest": {"$ref": "#/$defs/digest"},
+        "selectorDigest": {"$ref": "#/$defs/digest"},
+        "intent": {"type": "string", "maxLength": 32768},
+        "action": {"$ref": "#/$defs/action"},
+        "candidates": {"type": "array", "items": {"$ref": "#/$defs/candidate"}},
+        "candidateCoverage": {"enum": ["full", "shortlist"]},
+        "requiredIds": {"$ref": "#/$defs/ids"},
+        "excludedIds": {"$ref": "#/$defs/ids"},
+        "maxSelections": {"type": "integer", "minimum": 0}
+      },
+      "allOf": [{"if": {"properties": {"event": {"const": "tool_call"}}}, "then": {"properties": {"action": {"type": "object"}}}}]
+    },
+    "reasonCode": {"enum": ["matched", "policy_only", "no_match", "insufficient_evidence", "inadequate_candidates", "policy_conflict", "missing_required", "selection_overflow", "context_overflow", "busy", "timeout", "backend_unavailable", "invalid_response", "stale_result", "body_unavailable"]},
+    "scoreSet": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "scorerDigest", "calibrationDigest", "values"],
+      "properties": {
+        "kind": {"enum": ["ranking", "calibrated_probability"]},
+        "scorerDigest": {"$ref": "#/$defs/digest"},
+        "calibrationDigest": {"oneOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+        "values": {"type": "array", "items": {
+          "type": "object", "additionalProperties": false, "required": ["id", "score"],
+          "properties": {"id": {"$ref": "#/$defs/id"}, "score": {"type": "number"}}
+        }}
+      },
+      "allOf": [
+        {"if": {"properties": {"kind": {"const": "ranking"}}}, "then": {"properties": {"calibrationDigest": {"type": "null"}}}},
+        {"if": {"properties": {"kind": {"const": "calibrated_probability"}}}, "then": {"properties": {
+          "calibrationDigest": {"$ref": "#/$defs/digest"},
+          "values": {"items": {"properties": {"score": {"minimum": 0, "maximum": 1}}}}
+        }}}
+      ]
+    },
+    "response": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "requestId", "sessionKey", "generation", "catalogDigest", "contextDigest", "policyDigest", "selectorDigest", "status", "selectedIds", "scores", "reasonCode"],
+      "properties": {
+        "version": {"const": 1},
+        "requestId": {"$ref": "#/$defs/id"},
+        "sessionKey": {"$ref": "#/$defs/id"},
+        "generation": {"type": "integer", "minimum": 0},
+        "catalogDigest": {"$ref": "#/$defs/digest"},
+        "contextDigest": {"$ref": "#/$defs/digest"},
+        "policyDigest": {"$ref": "#/$defs/digest"},
+        "selectorDigest": {"$ref": "#/$defs/digest"},
+        "status": {"enum": ["selected", "none", "uncertain"]},
+        "selectedIds": {"$ref": "#/$defs/ids"},
+        "scores": {"oneOf": [{"$ref": "#/$defs/scoreSet"}, {"type": "null"}]},
+        "reasonCode": {"$ref": "#/$defs/reasonCode"}
+      },
+      "allOf": [
+        {"if": {"properties": {"status": {"const": "selected"}}}, "then": {"properties": {"selectedIds": {"minItems": 1}, "reasonCode": {"enum": ["matched", "policy_only"]}}}},
+        {"if": {"properties": {"status": {"const": "none"}}}, "then": {"properties": {"selectedIds": {"maxItems": 0}, "reasonCode": {"const": "no_match"}}}},
+        {"if": {"properties": {"status": {"const": "uncertain"}}}, "then": {"properties": {"selectedIds": {"maxItems": 0}, "reasonCode": {"not": {"enum": ["matched", "policy_only", "no_match"]}}}}}
+      ]
+    },
+    "telemetry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "eventKey", "status", "reasonCode", "candidateCount", "selectedCount", "requiredCount", "elapsedMs", "cacheHit"],
+      "properties": {
+        "version": {"const": 1},
+        "eventKey": {"type": "string", "pattern": "^[0-9a-f]{32}$", "description": "Random task-local identifier, not a source/session ID or plaintext hash."},
+        "status": {"enum": ["selected", "none", "uncertain"]},
+        "reasonCode": {"$ref": "#/$defs/reasonCode"},
+        "candidateCount": {"type": "integer", "minimum": 0},
+        "selectedCount": {"type": "integer", "minimum": 0},
+        "requiredCount": {"type": "integer", "minimum": 0},
+        "elapsedMs": {"type": "number", "minimum": 0},
+        "cacheHit": {"type": "boolean"}
+      }
+    }
+  }
+}
